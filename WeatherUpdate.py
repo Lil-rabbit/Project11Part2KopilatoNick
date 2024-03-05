@@ -1,4 +1,4 @@
-
+""" Email sender, no need to touch"""
 import base64
 from email.message import EmailMessage
 from Booking import *
@@ -33,15 +33,15 @@ def main():
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-          creds.refresh(Request())
+            creds.refresh(Request())
         else:
-          flow = InstalledAppFlow.from_client_secrets_file(
-              "credentials.json", SCOPES
-          )
-          creds = flow.run_local_server(port=0)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                "credentials.json", SCOPES
+            )
+            creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open("token.json", "w") as token:
-          token.write(creds.to_json())
+            token.write(creds.to_json())
 
     """Create and insert a draft email.
        Print the returned draft's message and id.
@@ -60,7 +60,7 @@ def main():
         message.set_content(f"{message_string}")
 
         message["To"] = f"{email_adress}"
-        message["From"] = "magarkopila22@gmail.com"
+        message["From"] = "nick.decoster07@gmail.com"
         message["Subject"] = "Weather voor sneeuwplekken"
 
         # encoded message
@@ -91,4 +91,4 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+    main()
