@@ -6,10 +6,8 @@ data_info_dict = {}
 message_string = ""
 
 
-def weather(plaats, lat, lon):
+def weather(plaats, lat, lon, ideal_temp, rain_tolerance):
     global message_string
-    rain_list = []
-    totaal_temp = []
 
     response = requests.get(
         f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid=55324226498c187fb750c027464f6da7&units=metric")
@@ -21,39 +19,56 @@ def weather(plaats, lat, lon):
         temp = timestamp.get("main")['temp']
         rain = timestamp.get("rain")
         date_obj = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S").date()
-        data_info_dict[date_obj] = {'temp': temp, 'rain': rain}
+        if date_obj not in data_info_dict:
+            data_info_dict[date_obj] = {'temps': [], 'rain': []}
+        data_info_dict[date_obj]['temps'].append(temp)
+        if rain:
+            data_info_dict[date_obj]['rain'].append(float(rain['3h']))
 
-    for data in data_info_dict.values():
-        if data['rain'] is not None:
-            rain_list.append(float(data['rain']['3h']))
+    rain_list = []
+    totaal_temp = []
 
-    totaal_rain = sum(rain_list)
+    for date, info in data_info_dict.items():
+        # Take only one temperature reading per day
+        avg_temp = sum(info['temps']) / len(info['temps'])
+        avg_rain = sum(info['rain']) / len(info['rain']) if info['rain'] else 0
+        totaal_temp.append(avg_temp)
+        rain_list.append(avg_rain)
 
-    for data in data_info_dict.values():
-        totaal_temp.append(float(data['temp']))
-    gemiddelde_temp = sum(totaal_temp) / len(totaal_temp)
+    gemiddelde_temp = round(sum(totaal_temp) / len(data_info_dict))
+    totaal_rain = round(sum(rain_list))
 
     score = 0
-    if gemiddelde_temp > 10:
-        score += 1
-    elif 5 < gemiddelde_temp <= 10:
-        score += 3
-    elif 0 < gemiddelde_temp <= 5:
-        score += 4
-    elif gemiddelde_temp <= 0:
+    # Temperature score calculation
+    temp_difference = abs(gemiddelde_temp - ideal_temp)
+    if temp_difference <= 2:
         score += 5
-
-    if totaal_rain > 5:
+    elif temp_difference <= 3:
+        score += 4
+    elif temp_difference <= 5:
+        score += 3
+    elif temp_difference <= 7:
+        score += 2
+    elif temp_difference <= 10:
         score += 1
 
-    if score >= 5:
-        score = 5
+    # Rain score calculation based on user preference
+    if rain_tolerance == 1:
+        if totaal_rain < 1:
+            score += 4
+    elif rain_tolerance == 2:
+        if totaal_rain < 2:
+            score += 4
+    elif rain_tolerance == 3:
+        score += 4
+
+    # Limiting the score to maximum 5
+    score = min(score, 5)
 
     message_string += f"{plaats}\n"
     message_string += f"Score: {score}/5\n"
-    for date, info in data_info_dict.items():
-        message_string += f"{date}\n"
-        message_string += f"Temperature: {info['temp']}°c\n"
+    message_string += f"Weekly Forecast:\n"
+    message_string += f"Average Temperature: {gemiddelde_temp}°C\n"
     message_string += f"Total Rain: {totaal_rain}mm\n\n"
 
 
@@ -70,7 +85,26 @@ locations = [
     {"plaats": "Bucharest, Romania", "lat": 44.4268, "lon": 26.1025}
 ]
 
-for location in locations:
-    weather(location["plaats"], location["lat"], location["lon"])
+# User input for ideal temperature and rain tolerance
+ideal_temp = float(input("Enter your ideal temperature in °C: "))
+print("Choose your rain tolerance:")
+print("1. Very little rain (filter for less than 1mm per day)")
+print("2. Less than 2mm per day (Belgian average)")
+print("3. No preference")
+rain_tolerance = int(input("Enter your choice (1/2/3): "))
+
+
+# Function to calculate the score
+def calculate_score(location):
+    weather(location["plaats"], location["lat"], location["lon"], ideal_temp, rain_tolerance)
+    return -int(message_string.split("\n")[1].split(": ")[1][0])
+
+
+# Sorting the locations based on score
+sorted_locations = sorted(locations, key=calculate_score)
+
+# Printing the sorted locations
+for location in sorted_locations:
+    weather(location["plaats"], location["lat"], location["lon"], ideal_temp, rain_tolerance)
 
 print(message_string)
