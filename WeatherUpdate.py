@@ -61,7 +61,7 @@ def main():
 
         message["To"] = f"{email_adress}"
         message["From"] = "nick.decoster07@gmail.com"
-        message["Subject"] = "Weather voor sneeuwplekken"
+        message["Subject"] = "☀️Weather for your summer holiday☀️"
 
         # encoded message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
