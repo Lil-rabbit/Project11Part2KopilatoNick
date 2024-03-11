@@ -1,8 +1,8 @@
-""" Email sender, no need to touch"""
+"""Use to send mail"""
 import base64
 from email.message import EmailMessage
 from Booking import *
-from emailSent import email_adress
+import re
 
 import google.auth
 from googleapiclient.discovery import build
@@ -18,6 +18,23 @@ from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.compose"]
+
+email_adress = input("Enter your email address: ")
+
+
+def check_email(email_adress):
+    # \b makes sure that the whole email is read as a 1 string
+    # r : raw string (letterlijk)
+    # all possible "errors" for email adress
+    pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+    # fullmatch() geeft True als het een match is
+    if re.fullmatch(pattern, email_adress):
+        pass
+    else:
+        print("invalid email address")
+
+
+check_email(email_adress)
 
 
 def main():
@@ -90,5 +107,9 @@ def main():
     return draft
 
 
-if __name__ == "__main__":
-    main()
+def send_email():
+    if __name__ == "__main__":
+        main()
+
+
+send_email()

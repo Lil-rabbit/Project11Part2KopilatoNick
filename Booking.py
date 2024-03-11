@@ -108,6 +108,9 @@ print("2. Less than 2mm per day (Belgian average)")
 print("3. No preference")
 rain_tolerance = int(input("Enter your choice (1/2/3): "))
 
+print(" Please wait...")
+
+
 sorted_locations = sorted(locations, key=lambda x: -
 calculate_scores(process_weather_data(get_weather_data(x["lat"], x["lon"])), ideal_temp, rain_tolerance)[0])
 
